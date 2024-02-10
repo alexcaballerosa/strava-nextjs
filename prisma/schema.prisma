@@ -1,0 +1,97 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_DIRECT_URL")
+}
+
+model StravaActivity {
+  id                   String             @id @default(uuid()) @db.Uuid
+  stravaId             BigInt             @unique @map("strava_id")
+  externalId           String?            @unique @map("external_id")
+  name                 String
+  distance             Decimal            @db.Decimal(10, 2)
+  movingTime           Int                @map("moving_time")
+  elapsedTime          Int                @map("elapsed_time")
+  totalElevationGain   Decimal            @default(0) @map("total_elevation_gain") @db.Decimal(10, 2)
+  elevHigh             Decimal            @default(0) @map("elev_high") @db.Decimal(10, 2)
+  elevLow              Decimal            @default(0) @map("elev_low") @db.Decimal(10, 2)
+  sportType            String             @map("sport_type")
+  startDate            DateTime           @map("start_date") @db.Timestamptz
+  locationCity         String?            @map("location_city")
+  locationCountry      String?            @map("location_country")
+  startLatLng          Json?              @map("start_latlng") @db.JsonB
+  endLatLng            Json?              @map("end_latlng") @db.JsonB
+  map                  String?
+  averageSpeed         Decimal            @map("average_speed") @db.Decimal(10, 3)
+  maxSpeed             Decimal            @map("max_speed") @db.Decimal(10, 2)
+  averageCadence       Decimal?           @map("average_cadence") @db.Decimal(10, 2)
+  averageHeartrate     Decimal?           @map("average_heartrate") @db.Decimal(10, 2)
+  maxHeartrate         Int?               @map("max_heartrate")
+  kilojoules           Decimal?           @db.Decimal(10, 2)
+  averageWatts         Decimal?           @map("average_watts") @db.Decimal(10, 2)
+  maxWatts             Int?               @map("max_watts")
+  weightedAverageWatts Int?               @map("weighted_average_watts")
+  description          String?
+  calories             Decimal?           @db.Decimal(10, 2)
+  deviceName           String?            @map("device_name")
+  splits               StravaSplit[]
+  laps                 StravaLap[]
+  bestEfforts          StravaBestEffort[]
+
+  @@map("strava_activities")
+}
+
+model StravaSplit {
+  id                  String         @id @default(uuid()) @db.Uuid
+  activity            StravaActivity @relation(fields: [stravaActivityId], references: [id], onDelete: Cascade)
+  stravaActivityId    String         @map("strava_activity_id") @db.Uuid
+  split               Int
+  distance            Decimal        @db.Decimal(10, 2)
+  movingTime          Int            @map("moving_time")
+  elapsedTime         Int            @map("elapsed_time")
+  elevationDifference Decimal        @default(0) @map("elevation_difference") @db.Decimal(10, 2)
+  averageSpeed        Decimal        @map("average_speed") @db.Decimal(10, 3)
+  averageHeartrate    Decimal?       @map("average_heartrate") @db.Decimal(10, 2)
+
+  @@map("strava_splits")
+}
+
+model StravaLap {
+  id                 String         @id @default(uuid()) @db.Uuid
+  lapId              BigInt         @unique @map("lap_id")
+  activity           StravaActivity @relation(fields: [stravaActivityId], references: [id], onDelete: Cascade)
+  stravaActivityId   String         @map("strava_activity_id") @db.Uuid
+  lap                Int
+  name               String
+  distance           Decimal        @db.Decimal(10, 2)
+  movingTime         Int            @map("moving_time")
+  elapsedTime        Int            @map("elapsed_time")
+  totalElevationGain Decimal        @default(0) @map("total_elevation_gain") @db.Decimal(10, 2)
+  startDate          DateTime       @map("start_date") @db.Timestamptz
+  averageSpeed       Decimal        @map("average_speed") @db.Decimal(10, 3)
+  maxSpeed           Decimal        @map("max_speed") @db.Decimal(10, 2)
+  averageCadence     Decimal?       @map("average_cadence") @db.Decimal(10, 2)
+  averageHeartrate   Decimal?       @map("average_heartrate") @db.Decimal(10, 2)
+  maxHeartrate       Int?           @map("max_heartrate")
+  averageWatts       Decimal?       @map("average_watts") @db.Decimal(10, 2)
+
+  @@map("strava_laps")
+}
+
+model StravaBestEffort {
+  id               String         @id @default(uuid()) @db.Uuid
+  bestEffortId     BigInt         @unique @map("best_effort_id")
+  activity         StravaActivity @relation(fields: [stravaActivityId], references: [id], onDelete: Cascade)
+  stravaActivityId String         @map("strava_activity_id") @db.Uuid
+  name             String
+  distance         Decimal        @db.Decimal(10, 2)
+  movingTime       Int            @map("moving_time")
+  elapsedTime      Int            @map("elapsed_time")
+  startDate        DateTime       @map("start_date") @db.Timestamptz
+
+  @@map("strava_best_efforts")
+}
